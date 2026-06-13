@@ -3,206 +3,460 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fortnite Battle Pass Tracker</title>
+    <title>Fortnite BP Tracker Pro</title>
     <style>
         :root {
-            --primary: #fdf035;
-            --bg: #12121c;
-            --surface: #1e1e2f;
-            --text: #ffffff;
-            --success: #4caf50;
-            --error: #f44336;
+            --bg-dark: #0b0e14;
+            --panel-bg: #151a26;
+            --panel-border: #242c3e;
+            --fortnite-yellow: #fde047;
+            --cyber-blue: #00f0ff;
+            --cyber-purple: #9d4edd;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --danger: #ef4444;
         }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
+
+        * {
+            box-sizing: border-box;
             margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
-        .container {
-            background: var(--surface);
-            padding: 2.5rem;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            max-width: 450px;
-            width: 100%;
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            padding-bottom: 80px; /* Space for bottom nav */
+        }
+
+        header {
+            background: linear-gradient(135deg, #1e1b4b, #311042);
+            padding: 20px;
             text-align: center;
-            border: 2px solid #2a2a40;
+            border-bottom: 3px solid var(--cyber-blue);
+            box-shadow: 0 4px 20px rgba(0, 240, 255, 0.15);
         }
-        h1 {
-            color: var(--primary);
-            margin-top: 0;
+
+        header h1 {
+            font-size: 1.8rem;
             text-transform: uppercase;
             letter-spacing: 2px;
-            font-size: 1.8rem;
+            color: #fff;
+            text-shadow: 0 0 10px var(--cyber-blue);
         }
-        .date-info {
-            font-size: 0.9rem;
-            color: #aaa;
-            margin-bottom: 2rem;
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 0 15px;
         }
-        .input-row {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 1.5rem;
-        }
-        .input-group {
-            flex: 1;
-            text-align: left;
-        }
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: #ccc;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-        input {
-            width: 100%;
-            padding: 0.8rem;
-            background: #12121c;
-            border: 2px solid #3b3b54;
-            border-radius: 8px;
-            color: white;
-            font-size: 1.1rem;
-            box-sizing: border-box;
-            transition: border-color 0.3s;
-        }
-        input:focus {
-            border-color: var(--primary);
-            outline: none;
-        }
-        button {
-            width: 100%;
-            padding: 1rem;
-            background: var(--primary);
-            color: #000;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            text-transform: uppercase;
-            transition: transform 0.1s, opacity 0.3s;
-        }
-        button:hover { opacity: 0.9; }
-        button:active { transform: scale(0.98); }
-        .results {
-            margin-top: 2rem;
-            padding-top: 1.5rem;
-            border-top: 2px solid #2a2a40;
+
+        /* Views management */
+        .view {
             display: none;
         }
-        .status {
-            font-size: 1.4rem;
-            font-weight: bold;
-            margin-bottom: 1rem;
+        .view.active {
+            display: block;
         }
-        .ahead { color: var(--success); }
-        .behind { color: var(--error); }
-        .details {
-            background: #12121c;
-            padding: 1rem;
-            border-radius: 8px;
+
+        .card {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        h2 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: var(--cyber-blue);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        input[type="number"], input[type="date"] {
+            width: 100%;
+            padding: 12px;
+            background: #0b0e14;
+            border: 1px solid var(--panel-border);
+            border-radius: 6px;
+            color: #fff;
             font-size: 1rem;
-            line-height: 1.6;
+            margin-bottom: 15px;
         }
-        .highlight {
-            color: var(--primary);
+
+        input:focus {
+            outline: none;
+            border-color: var(--cyber-blue);
+        }
+
+        /* Goal Quick Buttons */
+        .goal-presets {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        button.btn-preset {
+            background: #1e293b;
+            border: 1px solid var(--panel-border);
+            color: #fff;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
             font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        button.btn-preset.active {
+            background: var(--cyber-purple);
+            border-color: var(--cyber-blue);
+            box-shadow: 0 0 8px var(--cyber-purple);
+        }
+
+        /* Calendar Styling */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            text-align: center;
+        }
+
+        .calendar-header {
+            font-weight: bold;
+            color: var(--cyber-blue);
+            font-size: 0.8rem;
+            padding-bottom: 5px;
+        }
+
+        .calendar-day {
+            background: #0b0e14;
+            border: 1px solid var(--panel-border);
+            padding: 10px 0;
+            font-size: 0.9rem;
+            border-radius: 4px;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s;
+        }
+
+        .calendar-day.empty {
+            background: transparent;
+            border: none;
+            cursor: default;
+        }
+
+        .calendar-day.blackout {
+            background: var(--danger);
+            color: white;
+            text-decoration: line-through;
+            border-color: #b91c1c;
+        }
+
+        /* Stats display */
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--panel-border);
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-val {
+            font-weight: bold;
+            color: var(--fortnite-yellow);
+        }
+
+        .stat-val.highlight {
+            color: var(--cyber-blue);
+            font-size: 1.2rem;
+            text-shadow: 0 0 5px rgba(0, 240, 255, 0.4);
+        }
+
+        /* Bottom Nav Tab Bar */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 65px;
+            background-color: var(--panel-bg);
+            border-top: 2px solid var(--panel-border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            width: 50%;
+            height: 100%;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+
+        .nav-item.active {
+            color: var(--cyber-blue);
+            background: linear-gradient(to top, rgba(0,240,255,0.05), transparent);
+            border-top: 3px solid var(--cyber-blue);
+        }
+
+        .nav-icon {
+            font-size: 1.3rem;
+            margin-bottom: 2px;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Season 3 Tracker</h1>
-    <div class="date-info">Season Ends: August 20, 2026</div>
+    <header>
+        <h1>BP Tracker Pro</h1>
+    </header>
 
-    <div class="input-row">
-        <div class="input-group">
-            <label for="currentLevel">Current Level:</label>
-            <input type="number" id="currentLevel" value="24" min="1" max="300">
+    <div class="container">
+        
+        <!-- DASHBOARD VIEW -->
+        <div id="dashboard-view" class="view active">
+            <div class="card">
+                <h2>Your Current Status</h2>
+                <label for="current-level">Current Level</label>
+                <input type="number" id="current-level" value="1" min="1" max="1000">
+                
+                <label for="season-end">Season End Date</label>
+                <input type="date" id="season-end">
+            </div>
+
+            <div class="card">
+                <h2>Your Goals & Strategy</h2>
+                <div class="stat-row">
+                    <span>Days Left Overall:</span>
+                    <span id="days-left" class="stat-val">-</span>
+                </div>
+                <div class="stat-row">
+                    <span>Playable Days Remaining:</span>
+                    <span id="playable-days" class="stat-val" style="color: var(--cyber-blue);">-</span>
+                </div>
+                <div class="stat-row">
+                    <span>Levels Needed:</span>
+                    <span id="levels-needed" class="stat-val">-</span>
+                </div>
+                <div class="stat-row">
+                    <span>Levels Per Playable Day:</span>
+                    <span id="levels-per-day" class="stat-val highlight">-</span>
+                </div>
+                <div class="stat-row">
+                    <span>XP Per Playable Day:</span>
+                    <span id="xp-per-day" class="stat-val highlight">-</span>
+                </div>
+            </div>
         </div>
-        <div class="input-group">
-            <label for="targetLevel">Target Level:</label>
-            <input type="number" id="targetLevel" value="200" min="1" max="300">
+
+        <!-- SETTINGS & CALENDAR VIEW -->
+        <div id="settings-view" class="view">
+            <div class="card">
+                <h2>Choose Target Goal</h2>
+                <div class="goal-presets">
+                    <button class="btn-preset active" onclick="setPresetGoal(100, this)">Finish Battle Pass (100)</button>
+                    <button class="btn-preset" onclick="setPresetGoal(200, this)">Bonus Rewards (200)</button>
+                </div>
+                <label for="target-level">Custom Target Level</label>
+                <input type="number" id="target-level" value="100" min="2" max="1000">
+            </div>
+
+            <div class="card">
+                <h2>Blackout Calendar</h2>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+                    Tap days you **cannot** play. The tracker will exclude them from calculations.
+                </p>
+                <h3 id="month-label" style="font-size: 1rem; margin-bottom: 10px; text-align: center; color: #fff;"></h3>
+                <div class="calendar-grid" id="calendar-container">
+                    <!-- Calendar injected via JS -->
+                </div>
+            </div>
         </div>
+
     </div>
 
-    <button onclick="calculatePace()">Check My Pace</button>
+    <!-- BOTTOM NAVIGATION TAB BAR -->
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('dashboard-view', this)">
+            <span class="nav-icon">📊</span>
+            <span>Dashboard</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('settings-view', this)">
+            <span class="nav-icon">⚙️</span>
+            <span>Goals & Calendar</span>
+        </div>
+    </nav>
 
-    <div class="results" id="resultsBox">
-        <div id="statusMessage" class="status"></div>
-        <div class="details" id="detailsMessage"></div>
-    </div>
-</div>
+    <script>
+        // Constants & State
+        const XP_PER_LEVEL = 80000;
+        let blackedOutDates = new Set(); // Stores strings of "YYYY-MM-DD"
+        
+        // Default target end date to roughly 2 months out if not set
+        const defaultEndDate = new Date();
+        defaultEndDate.setDate(defaultEndDate.getDate() + 60);
+        document.getElementById('season-end').value = defaultEndDate.toISOString().split('T')[0];
 
-<script>
-    function calculatePace() {
-        const seasonStart = new Date('2026-06-06');
-        const seasonEnd = new Date('2026-08-20');
-        let today = new Date();
-        
-        // Safety check if viewing outside season dates
-        if (today < seasonStart) today = new Date(seasonStart);
-        if (today > seasonEnd) today = new Date(seasonEnd);
+        // Element Selectors
+        const currentLevelInput = document.getElementById('current-level');
+        const targetLevelInput = document.getElementById('target-level');
+        const seasonEndDateInput = document.getElementById('season-end');
 
-        const userLevel = parseInt(document.getElementById('currentLevel').value) || 1;
-        const targetLevel = parseInt(document.getElementById('targetLevel').value) || 100;
-
-        // Calculations
-        const totalDuration = (seasonEnd - seasonStart) / (1000 * 60 * 60 * 24);
-        const daysPassed = Math.floor((today - seasonStart) / (1000 * 60 * 60 * 24));
-        const daysRemaining = Math.ceil((seasonEnd - today) / (1000 * 60 * 60 * 24));
-        
-        // Target pace starting from level 1
-        const idealPacePerDay = (targetLevel - 1) / totalDuration;
-        const idealLevelToday = Math.round(1 + (idealPacePerDay * daysPassed));
-        
-        const levelDifference = userLevel - idealLevelToday;
-        const remainingLevels = targetLevel - userLevel;
-        
-        // Calculate required pace going forward
-        let newRequiredPace = 0;
-        if (remainingLevels > 0 && daysRemaining > 0) {
-            newRequiredPace = (remainingLevels / daysRemaining).toFixed(1);
+        // Tab Switching Logic
+        function switchTab(viewId, element) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            
+            document.getElementById(viewId).classList.add('active');
+            element.classList.add('active');
         }
 
-        // Elements
-        const resultsBox = document.getElementById('resultsBox');
-        const statusMessage = document.getElementById('statusMessage');
-        const detailsMessage = document.getElementById('detailsMessage');
-
-        resultsBox.style.display = 'block';
-
-        if (userLevel >= targetLevel) {
-            statusMessage.innerHTML = `🎉 Goal Achieved!`;
-            statusMessage.className = "status ahead";
-            detailsMessage.innerHTML = `You've already hit or passed your target level of <span class="highlight">${targetLevel}</span>! Great job!`;
-            return;
+        // Quick Preset Target Buttons
+        function setPresetGoal(level, button) {
+            document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
+            button.classList.add('active');
+            targetLevelInput.value = level;
+            calculate();
         }
 
-        if (levelDifference >= 0) {
-            statusMessage.innerHTML = `🏆 Ahead of Pace!`;
-            statusMessage.className = "status ahead";
-        } else {
-            statusMessage.innerHTML = `⚠️ Behind Pace!`;
-            statusMessage.className = "status behind";
+        // Initialize and Draw Calendar
+        function renderCalendar() {
+            const container = document.getElementById('calendar-container');
+            container.innerHTML = '';
+            
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            document.getElementById('month-label').innerText = `${monthNames[month]} ${year}`;
+
+            // Weekday headers
+            const daysOfWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+            daysOfWeek.forEach(d => {
+                const headerDiv = document.createElement('div');
+                headerDiv.classList.add('calendar-header');
+                headerDiv.innerText = d;
+                container.appendChild(headerDiv);
+            });
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const totalDays = new Date(year, month + 1, 0).getDate();
+
+            // Padding for blank days at start of month
+            for(let i = 0; i < firstDayIndex; i++) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.classList.add('calendar-day', 'empty');
+                container.appendChild(emptyDiv);
+            }
+
+            // Create clickable calendar days
+            for(let day = 1; day <= totalDays; day++) {
+                const dayDiv = document.createElement('div');
+                dayDiv.classList.add('calendar-day');
+                dayDiv.innerText = day;
+                
+                // Format date string as key
+                const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                
+                // Check if already blacked out
+                if (blackedOutDates.has(dateString)) {
+                    dayDiv.classList.add('blackout');
+                }
+
+                // Click handler to toggle blackout
+                dayDiv.addEventListener('click', () => {
+                    if (blackedOutDates.has(dateString)) {
+                        blackedOutDates.delete(dateString);
+                        dayDiv.classList.remove('blackout');
+                    } else {
+                        blackedOutDates.add(dateString);
+                        dayDiv.classList.add('blackout');
+                    }
+                    calculate();
+                });
+
+                container.appendChild(dayDiv);
+            }
         }
 
-        detailsMessage.innerHTML = `
-            To hit level ${targetLevel}, you should be at level <span class="highlight">${idealLevelToday}</span> today.<br>
-            You are <span class="highlight">${Math.abs(levelDifference)}</span> levels ${levelDifference >= 0 ? 'ahead' : 'behind'}.<br><br>
-            Days remaining in season: <strong>${daysRemaining}</strong><br>
-            Pace needed to finish: <span class="highlight">${newRequiredPace}</span> levels/day.
-        `;
-    }
-</script>
+        // Main Calculation Engine
+        function calculate() {
+            const currentLevel = parseInt(currentLevelInput.value) || 1;
+            const targetLevel = parseInt(targetLevelInput.value) || 100;
+            const endDateStr = seasonEndDateInput.value;
 
+            if (!endDateStr) return;
+
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const endDate = new Date(endDateStr);
+            endDate.setHours(0,0,0,0);
+
+            // Compute calendar differences
+            const timeDiff = endDate.getTime() - today.getTime();
+            const totalDaysLeft = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+
+            if (totalDaysLeft <= 0) {
+                document.getElementById('levels-per-day').innerText = "Season Ended";
+                return;
+            }
+
+            // Calculate how many blackout days fall within the remaining active window
+            let activeBlackoutDays = 0;
+            blackedOutDates.forEach(dateStr => {
+                const bDate = new Date(dateStr);
+                bDate.setHours(0,0,0,0);
+                if (bDate >= today && bDate <= endDate) {
+                    activeBlackoutDays++;
+                }
+            });
+
+            const playableDaysLeft = Math.max(1, totalDaysLeft - activeBlackoutDays);
+            const levelsNeeded = Math.max(0, targetLevel - currentLevel);
+            
+            const levelsPerPlayableDay = levelsNeeded / playableDaysLeft;
+            const xpPerPlayableDay = levelsPerPlayableDay * XP_PER_LEVEL;
+
+            // UI Updates
+            document.getElementById('days-left').innerText = totalDaysLeft;
+            document.getElementById('playable-days').innerText = `${playableDaysLeft} (Skipped ${activeBlackoutDays})`;
+            document.getElementById('levels-needed').innerText = levelsNeeded;
+            document.getElementById('levels-per-day').innerText = levelsPerPlayableDay.toFixed(2);
+            document.getElementById('xp-per-day').innerText = Math.round(xpPerPlayableDay).toLocaleString();
+        }
+
+        // Watch for changes
+        [currentLevelInput, targetLevelInput, seasonEndDateInput].forEach(input => {
+            input.addEventListener('input', calculate);
+        });
+
+        // Initialize on load
+        renderCalendar();
+        calculate();
+    </script>
 </body>
 </html>

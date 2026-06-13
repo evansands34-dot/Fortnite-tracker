@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fortnite Battle Pass Tracker</title>
+    <style>
+        :root {
+            --primary: #fdf035;
+            --bg: #12121c;
+            --surface: #1e1e2f;
+            --text: #ffffff;
+            --success: #4caf50;
+            --error: #f44336;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: var(--surface);
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 450px;
+            width: 100%;
+            text-align: center;
+            border: 2px solid #2a2a40;
+        }
+        h1 {
+            color: var(--primary);
+            margin-top: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 1.8rem;
+        }
+        .date-info {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-bottom: 2rem;
+        }
+        .input-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #ccc;
+            font-weight: 600;
+        }
+        input {
+            width: 100%;
+            padding: 0.8rem;
+            background: #12121c;
+            border: 2px solid #3b3b54;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.1rem;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+        button {
+            width: 100%;
+            padding: 1rem;
+            background: var(--primary);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: transform 0.1s, opacity 0.3s;
+        }
+        button:hover { opacity: 0.9; }
+        button:active { transform: scale(0.98); }
+        .results {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid #2a2a40;
+            display: none;
+        }
+        .status {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        .ahead { color: var(--success); }
+        .behind { color: var(--error); }
+        .details {
+            background: #12121c;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        .highlight {
+            color: var(--primary);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Season 3 Tracker</h1>
+    <div class="date-info">Season Ends: August 20, 2026</div>
+
+    <div class="input-group">
+        <label for="currentLevel">Your Current Level:</label>
+        <input type="number" id="currentLevel" value="24" min="1" max="200">
+    </div>
+
+    <button onclick="calculatePace()">Check My Pace</button>
+
+    <div class="results" id="resultsBox">
+        <div id="statusMessage" class="status"></div>
+        <div class="details" id="detailsMessage"></div>
+    </div>
+</div>
+
+<script>
+    function calculatePace() {
+        const seasonStart = new Date('2026-06-06');
+        const seasonEnd = new Date('2026-08-20');
+        const today = new Date();
+        
+        // Safety check if viewing outside season dates
+        if (today < seasonStart) today.setTime(seasonStart.getTime());
+        if (today > seasonEnd) today.setTime(seasonEnd.getTime());
+
+        const targetLevel = 200;
+        const userLevel = parseInt(document.getElementById('currentLevel').value) || 0;
+
+        // Calculations
+        const totalDuration = (seasonEnd - seasonStart) / (1000 * 60 * 60 * 24);
+        const daysPassed = Math.floor((today - seasonStart) / (1000 * 60 * 60 * 24));
+        const daysRemaining = Math.ceil((seasonEnd - today) / (1000 * 60 * 60 * 24));
+        
+        const idealPacePerDay = (targetLevel - 1) / totalDuration;
+        const idealLevelToday = Math.round(1 + (idealPacePerDay * daysPassed));
+        
+        const levelDifference = userLevel - idealLevelToday;
+        const remainingLevels = targetLevel - userLevel;
+        const newRequiredPace = remainingLevels > 0 ? (remainingLevels / daysRemaining).toFixed(1) : 0;
+
+        // Elements
+        const resultsBox = document.getElementById('resultsBox');
+        const statusMessage = document.getElementById('statusMessage');
+        const detailsMessage = document.getElementById('detailsMessage');
+
+        resultsBox.style.display = 'block';
+
+        if (levelDifference >= 0) {
+            statusMessage.innerHTML = `🏆 Ahead of Pace!`;
+            statusMessage.className = "status ahead";
+        } else {
+            statusMessage.innerHTML = `⚠️ Behind Pace!`;
+            statusMessage.className = "status behind";
+        }
+
+        detailsMessage.innerHTML = `
+            The ideal level for today is <span class="highlight">${idealLevelToday}</span>.<br>
+            You are <span class="highlight">${Math.abs(levelDifference)}</span> levels ${levelDifference >= 0 ? 'ahead' : 'behind'}.<br><br>
+            Days remaining: <strong>${daysRemaining}</strong><br>
+            New required pace: <span class="highlight">${newRequiredPace}</span> levels/day.
+        `;
+    }
+</script>
+
+</body>
+</html>

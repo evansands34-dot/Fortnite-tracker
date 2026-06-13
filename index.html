@@ -45,8 +45,13 @@
             color: #aaa;
             margin-bottom: 2rem;
         }
-        .input-group {
+        .input-row {
+            display: flex;
+            gap: 15px;
             margin-bottom: 1.5rem;
+        }
+        .input-group {
+            flex: 1;
             text-align: left;
         }
         label {
@@ -54,6 +59,7 @@
             margin-bottom: 0.5rem;
             color: #ccc;
             font-weight: 600;
+            font-size: 0.9rem;
         }
         input {
             width: 100%;
@@ -117,9 +123,15 @@
     <h1>Season 3 Tracker</h1>
     <div class="date-info">Season Ends: August 20, 2026</div>
 
-    <div class="input-group">
-        <label for="currentLevel">Your Current Level:</label>
-        <input type="number" id="currentLevel" value="24" min="1" max="200">
+    <div class="input-row">
+        <div class="input-group">
+            <label for="currentLevel">Current Level:</label>
+            <input type="number" id="currentLevel" value="24" min="1" max="300">
+        </div>
+        <div class="input-group">
+            <label for="targetLevel">Target Level:</label>
+            <input type="number" id="targetLevel" value="200" min="1" max="300">
+        </div>
     </div>
 
     <button onclick="calculatePace()">Check My Pace</button>
@@ -134,26 +146,32 @@
     function calculatePace() {
         const seasonStart = new Date('2026-06-06');
         const seasonEnd = new Date('2026-08-20');
-        const today = new Date();
+        let today = new Date();
         
         // Safety check if viewing outside season dates
-        if (today < seasonStart) today.setTime(seasonStart.getTime());
-        if (today > seasonEnd) today.setTime(seasonEnd.getTime());
+        if (today < seasonStart) today = new Date(seasonStart);
+        if (today > seasonEnd) today = new Date(seasonEnd);
 
-        const targetLevel = 200;
-        const userLevel = parseInt(document.getElementById('currentLevel').value) || 0;
+        const userLevel = parseInt(document.getElementById('currentLevel').value) || 1;
+        const targetLevel = parseInt(document.getElementById('targetLevel').value) || 100;
 
         // Calculations
         const totalDuration = (seasonEnd - seasonStart) / (1000 * 60 * 60 * 24);
         const daysPassed = Math.floor((today - seasonStart) / (1000 * 60 * 60 * 24));
         const daysRemaining = Math.ceil((seasonEnd - today) / (1000 * 60 * 60 * 24));
         
+        // Target pace starting from level 1
         const idealPacePerDay = (targetLevel - 1) / totalDuration;
         const idealLevelToday = Math.round(1 + (idealPacePerDay * daysPassed));
         
         const levelDifference = userLevel - idealLevelToday;
         const remainingLevels = targetLevel - userLevel;
-        const newRequiredPace = remainingLevels > 0 ? (remainingLevels / daysRemaining).toFixed(1) : 0;
+        
+        // Calculate required pace going forward
+        let newRequiredPace = 0;
+        if (remainingLevels > 0 && daysRemaining > 0) {
+            newRequiredPace = (remainingLevels / daysRemaining).toFixed(1);
+        }
 
         // Elements
         const resultsBox = document.getElementById('resultsBox');
@@ -161,6 +179,13 @@
         const detailsMessage = document.getElementById('detailsMessage');
 
         resultsBox.style.display = 'block';
+
+        if (userLevel >= targetLevel) {
+            statusMessage.innerHTML = `🎉 Goal Achieved!`;
+            statusMessage.className = "status ahead";
+            detailsMessage.innerHTML = `You've already hit or passed your target level of <span class="highlight">${targetLevel}</span>! Great job!`;
+            return;
+        }
 
         if (levelDifference >= 0) {
             statusMessage.innerHTML = `🏆 Ahead of Pace!`;
@@ -171,10 +196,10 @@
         }
 
         detailsMessage.innerHTML = `
-            The ideal level for today is <span class="highlight">${idealLevelToday}</span>.<br>
+            To hit level ${targetLevel}, you should be at level <span class="highlight">${idealLevelToday}</span> today.<br>
             You are <span class="highlight">${Math.abs(levelDifference)}</span> levels ${levelDifference >= 0 ? 'ahead' : 'behind'}.<br><br>
-            Days remaining: <strong>${daysRemaining}</strong><br>
-            New required pace: <span class="highlight">${newRequiredPace}</span> levels/day.
+            Days remaining in season: <strong>${daysRemaining}</strong><br>
+            Pace needed to finish: <span class="highlight">${newRequiredPace}</span> levels/day.
         `;
     }
 </script>

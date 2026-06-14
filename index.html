@@ -18,6 +18,7 @@
             --text-muted: #9ca3af;
             --danger: #ef4444;
             --success: #22c55e;
+            --warning: #f59e0b;
         }
 
         * {
@@ -350,9 +351,15 @@
                 <label for="current-level">Current Level</label>
                 <input type="number" id="current-level" value="1" min="1" max="1000">
                 
-                <div class="stat-row" style="border-bottom: none; padding: 0 0 10px 0;">
+                <div class="stat-row" style="border-bottom: none; padding: 0 0 5px 0;">
                     <span>Next Milestone Reward:</span>
                     <span id="next-milestone" style="color: var(--cyber-purple); font-weight: bold;">-</span>
+                </div>
+
+                <!-- NEW LIVE PACE TRACKER ROW -->
+                <div class="stat-row" style="border-bottom: none; padding: 0 0 15px 0;">
+                    <span>Pace Status:</span>
+                    <span id="pace-status" style="font-weight: bold;">-</span>
                 </div>
 
                 <label>Goal Progress Bar</label>
@@ -398,6 +405,9 @@
                 
                 <label for="target-level">Custom Target Level</label>
                 <input type="number" id="target-level" value="100" min="2" max="1000">
+
+                <label for="season-start">Season Start Date (For Pace Tracking)</label>
+                <input type="date" id="season-start">
 
                 <label for="season-end">Season End Date</label>
                 <input type="date" id="season-end">
@@ -452,7 +462,7 @@
             </div>
         </div>
 
-        <!-- NEW VIEW 4: COMPLETED DAYS TRACKER -->
+        <!-- VIEW 4: COMPLETED DAYS TRACKER -->
         <div id="completed-view" class="view">
             <div class="card">
                 <h2>Days Completed Tracker</h2>
@@ -529,6 +539,7 @@
 
         const currentLevelInput = document.getElementById('current-level');
         const targetLevelInput = document.getElementById('target-level');
+        const seasonStartDateInput = document.getElementById('season-start');
         const seasonEndDateInput = document.getElementById('season-end');
         const matchesInput = document.getElementById('matches-per-day');
 
@@ -567,6 +578,7 @@
         function saveAllData() {
             localStorage.setItem('bp_curr_lvl', currentLevelInput.value);
             localStorage.setItem('bp_targ_lvl', targetLevelInput.value);
+            localStorage.setItem('bp_start_date', seasonStartDateInput.value);
             localStorage.setItem('bp_end_date', seasonEndDateInput.value);
             localStorage.setItem('bp_matches', matchesInput.value);
             localStorage.setItem('bp_blackouts', JSON.stringify(Array.from(blackedOutDates)));
@@ -583,6 +595,13 @@
                 if (targetLevelInput.value == "200") document.getElementById('preset-200').classList.add('active');
             }
             
+            // Set dynamic baseline start date if empty
+            if (localStorage.getItem('bp_start_date')) {
+                seasonStartDateInput.value = localStorage.getItem('bp_start_date');
+            } else {
+                seasonStartDateInput.value = "2026-05-15"; 
+            }
+
             if (localStorage.getItem('bp_end_date')) {
                 seasonEndDateInput.value = localStorage.getItem('bp_end_date');
             } else {
@@ -647,7 +666,6 @@
                     } else {
                         blackedOutDates.add(dStr);
                         dDiv.classList.add('blackout');
-                        // Can't have a day both blacked out and completed
                         completedDates.delete(dStr);
                     }
                     saveAllData();
@@ -708,7 +726,6 @@
                     } else {
                         completedDates.add(dStr);
                         dDiv.classList.add('completed-day');
-                        // Can't have a day both completed and blacked out
                         blackedOutDates.delete(dStr);
                     }
                     saveAllData();
@@ -734,6 +751,7 @@
         function calculate() {
             const curr = parseInt(currentLevelInput.value) || 1;
             const targ = parseInt(targetLevelInput.value) || 100;
+            const startStr = seasonStartDateInput.value;
             const endStr = seasonEndDateInput.value;
             const matches = parseInt(matchesInput.value) || 0;
 
@@ -770,18 +788,23 @@
                 lastCelebratedGoal = null;
             }
 
-            if (!endStr) return;
+            if (!endStr || !startStr) return;
 
             const today = new Date();
             today.setHours(0,0,0,0);
+            const startDate = new Date(startStr);
+            startDate.setHours(0,0,0,0);
             const endDate = new Date(endStr);
             endDate.setHours(0,0,0,0);
 
+            // Output Calculations
             const totalDays = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 3600 * 24)) + 1;
 
             if (totalDays <= 0) {
                 document.getElementById('levels-per-day').innerText = "Ended";
                 document.getElementById('xp-per-day').innerText = "0";
+                document.getElementById('pace-status').innerText = "Season Finished";
+                document.getElementById('pace-status').style.color = "var(--text-muted)";
                 return;
             }
 
@@ -802,9 +825,36 @@
             document.getElementById('levels-needed').innerText = lvlsNeeded;
             document.getElementById('levels-per-day').innerText = lvlsPerDay.toFixed(2);
             document.getElementById('xp-per-day').innerText = Math.round(xpPerDay).toLocaleString();
+
+            // ADVANCED LIVE PACE CHECK CALCULATION ENGINE
+            const totalSeasonDuration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)) + 1;
+            const daysPassed = Math.ceil((today.getTime() - startDate.getTime()) / (1000 * 3600 * 24));
+
+            if (totalSeasonDuration > 0 && daysPassed >= 0) {
+                // Static ideal standard baseline pace per day from beginning to end
+                const idealLevelsPerDay = (targ - 1) / totalSeasonDuration;
+                const expectedCurrentLevel = 1 + (idealLevelsPerDay * daysPassed);
+                
+                const levelDifference = curr - expectedCurrentLevel;
+                const paceElement = document.getElementById('pace-status');
+
+                if (levelDifference > 0.5) {
+                    paceElement.innerText = `🟢 Ahead of Pace by ${Math.abs(levelDifference).toFixed(1)} Levels (Crushing it!)`;
+                    paceElement.style.color = "var(--success)";
+                } else if (levelDifference < -0.5) {
+                    paceElement.innerText = `🔴 Behind Pace by ${Math.abs(levelDifference).toFixed(1)} Levels (Need to catch up!)`;
+                    paceElement.style.color = "var(--danger)";
+                } else {
+                    paceElement.innerText = `🟡 Exactly on Pace`;
+                    paceElement.style.color = "var(--warning)";
+                }
+            } else {
+                document.getElementById('pace-status').innerText = "Awaiting start date...";
+                document.getElementById('pace-status').style.color = "var(--text-muted)";
+            }
         }
 
-        [currentLevelInput, targetLevelInput, seasonEndDateInput, matchesInput].forEach(input => {
+        [currentLevelInput, targetLevelInput, seasonStartDateInput, seasonEndDateInput, matchesInput].forEach(input => {
             input.addEventListener('input', () => {
                 saveAllData();
                 calculate();
@@ -818,4 +868,4 @@
         calculate();
     </script>
 </body>
-                    </html>
+    </html>

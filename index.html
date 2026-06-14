@@ -30,7 +30,7 @@
         body {
             background-color: var(--bg-dark);
             color: var(--text-main);
-            padding-bottom: 90px;
+            padding-bottom: 95px;
         }
 
         header {
@@ -203,7 +203,7 @@
             color: var(--fortnite-yellow);
         }
 
-        /* Full Month Engine Grid */
+        /* Calendar Engine Grid */
         .calendar-nav {
             display: flex;
             justify-content: space-between;
@@ -258,6 +258,15 @@
             border-color: #b91c1c;
         }
 
+        /* Green Complete Calendar Style */
+        .calendar-day.completed-day {
+            background: rgba(34, 197, 94, 0.25);
+            color: #fff;
+            border-color: var(--success);
+            font-weight: bold;
+            box-shadow: inset 0 0 5px rgba(34, 197, 94, 0.4);
+        }
+
         /* Dashboard Stat Columns */
         .stat-row {
             display: flex;
@@ -281,13 +290,13 @@
             text-shadow: 0 0 5px rgba(0, 240, 255, 0.4);
         }
 
-        /* Floating 4-Tab Bar Navigation */
+        /* Floating 5-Tab Bar Navigation */
         .bottom-nav {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            height: 70px;
+            height: 75px;
             background-color: var(--panel-bg);
             border-top: 2px solid var(--panel-border);
             display: flex;
@@ -302,12 +311,13 @@
             align-items: center;
             color: var(--text-muted);
             cursor: pointer;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 500;
-            width: 25%;
+            width: 20%;
             height: 100%;
             justify-content: center;
             transition: color 0.2s;
+            text-align: center;
         }
 
         .nav-item.active {
@@ -317,7 +327,7 @@
         }
 
         .nav-icon {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             margin-bottom: 2px;
         }
     </style>
@@ -442,7 +452,27 @@
             </div>
         </div>
 
-        <!-- VIEW 4: BLACKOUT CALENDAR -->
+        <!-- NEW VIEW 4: COMPLETED DAYS TRACKER -->
+        <div id="completed-view" class="view">
+            <div class="card">
+                <h2>Days Completed Tracker</h2>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">
+                    Tap on days where you successfully hit or cleared your daily targeted levels! Marked days turn green.
+                </p>
+                
+                <div class="calendar-nav">
+                    <button onclick="changeCompletedMonth(-1)">◀ Prev</button>
+                    <h3 id="completed-month-label" style="font-size: 1rem; color: #fff;"></h3>
+                    <button onclick="changeCompletedMonth(1)">Next ▶</button>
+                </div>
+
+                <div class="calendar-grid" id="completed-calendar-container">
+                    <!-- Loaded dynamically via script -->
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 5: BLACKOUT CALENDAR -->
         <div id="calendar-view" class="view">
             <div class="card">
                 <h2>Blackout Calendar</h2>
@@ -451,20 +481,20 @@
                 </p>
                 
                 <div class="calendar-nav">
-                    <button onclick="changeMonth(-1)">◀ Prev</button>
-                    <h3 id="month-label" style="font-size: 1rem; color: #fff;"></h3>
-                    <button onclick="changeMonth(1)">Next ▶</button>
+                    <button onclick="changeBlackoutMonth(-1)">◀ Prev</button>
+                    <h3 id="blackout-month-label" style="font-size: 1rem; color: #fff;"></h3>
+                    <button onclick="changeBlackoutMonth(1)">Next ▶</button>
                 </div>
 
-                <div class="calendar-grid" id="calendar-container">
-                    <!-- Script Controlled Calendar Build -->
+                <div class="calendar-grid" id="blackout-calendar-container">
+                    <!-- Loaded dynamically via script -->
                 </div>
             </div>
         </div>
 
     </div>
 
-    <!-- 4 INDEPENDENT TABS NAVIGATION MENU BAR -->
+    <!-- 5 INDEPENDENT TABS NAVIGATION MENU BAR -->
     <nav class="bottom-nav">
         <div class="nav-item active" onclick="switchTab('dashboard-view', this)">
             <span class="nav-icon">📊</span>
@@ -478,16 +508,23 @@
             <span class="nav-icon">⚔️</span>
             <span>Quests</span>
         </div>
+        <div class="nav-item" onclick="switchTab('completed-view', this)">
+            <span class="nav-icon">✅</span>
+            <span>Completed</span>
+        </div>
         <div class="nav-item" onclick="switchTab('calendar-view', this)">
             <span class="nav-icon">📅</span>
-            <span>Calendar</span>
+            <span>Blackout</span>
         </div>
     </nav>
 
     <script>
         const XP_PER_LEVEL = 80000;
         let blackedOutDates = new Set();
-        let currentCalendarDate = new Date();
+        let completedDates = new Set();
+        
+        let blackoutCalendarDate = new Date();
+        let completedCalendarDate = new Date();
         let lastCelebratedGoal = null;
 
         const currentLevelInput = document.getElementById('current-level');
@@ -533,6 +570,7 @@
             localStorage.setItem('bp_end_date', seasonEndDateInput.value);
             localStorage.setItem('bp_matches', matchesInput.value);
             localStorage.setItem('bp_blackouts', JSON.stringify(Array.from(blackedOutDates)));
+            localStorage.setItem('bp_completed', JSON.stringify(Array.from(completedDates)));
         }
 
         function loadAllData() {
@@ -548,30 +586,33 @@
             if (localStorage.getItem('bp_end_date')) {
                 seasonEndDateInput.value = localStorage.getItem('bp_end_date');
             } else {
-                seasonEndDateInput.value = "2026-08-20"; // Automatic Season 3 placeholder target default
+                seasonEndDateInput.value = "2026-08-20";
             }
 
             if (localStorage.getItem('bp_blackouts')) {
                 blackedOutDates = new Set(JSON.parse(localStorage.getItem('bp_blackouts')));
             }
+            if (localStorage.getItem('bp_completed')) {
+                completedDates = new Set(JSON.parse(localStorage.getItem('bp_completed')));
+            }
             loadQuests();
         }
 
-        // Infinite Month Navigation Processor
-        function changeMonth(direction) {
-            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + direction);
-            renderCalendar();
+        // Blackout Calendar Nav Engine
+        function changeBlackoutMonth(direction) {
+            blackoutCalendarDate.setMonth(blackoutCalendarDate.getMonth() + direction);
+            renderBlackoutCalendar();
         }
 
-        function renderCalendar() {
-            const container = document.getElementById('calendar-container');
+        function renderBlackoutCalendar() {
+            const container = document.getElementById('blackout-calendar-container');
             container.innerHTML = '';
             
-            const year = currentCalendarDate.getFullYear();
-            const month = currentCalendarDate.getMonth();
+            const year = blackoutCalendarDate.getFullYear();
+            const month = blackoutCalendarDate.getMonth();
             
             const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            document.getElementById('month-label').innerText = `${monthNames[month]} ${year}`;
+            document.getElementById('blackout-month-label').innerText = `${monthNames[month]} ${year}`;
 
             const daysOfWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
             daysOfWeek.forEach(d => {
@@ -606,9 +647,73 @@
                     } else {
                         blackedOutDates.add(dStr);
                         dDiv.classList.add('blackout');
+                        // Can't have a day both blacked out and completed
+                        completedDates.delete(dStr);
                     }
                     saveAllData();
                     calculate();
+                    renderCompletedCalendar();
+                });
+
+                container.appendChild(dDiv);
+            }
+        }
+
+        // Completed Calendar Nav Engine
+        function changeCompletedMonth(direction) {
+            completedCalendarDate.setMonth(completedCalendarDate.getMonth() + direction);
+            renderCompletedCalendar();
+        }
+
+        function renderCompletedCalendar() {
+            const container = document.getElementById('completed-calendar-container');
+            container.innerHTML = '';
+            
+            const year = completedCalendarDate.getFullYear();
+            const month = completedCalendarDate.getMonth();
+            
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            document.getElementById('completed-month-label').innerText = `${monthNames[month]} ${year}`;
+
+            const daysOfWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+            daysOfWeek.forEach(d => {
+                const h = document.createElement('div');
+                h.classList.add('calendar-header');
+                h.innerText = d;
+                container.appendChild(h);
+            });
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const totalDays = new Date(year, month + 1, 0).getDate();
+
+            for(let i = 0; i < firstDay; i++) {
+                const e = document.createElement('div');
+                e.classList.add('calendar-day', 'empty');
+                container.appendChild(e);
+            }
+
+            for(let day = 1; day <= totalDays; day++) {
+                const dDiv = document.createElement('div');
+                dDiv.classList.add('calendar-day');
+                dDiv.innerText = day;
+                
+                const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                
+                if (completedDates.has(dStr)) dDiv.classList.add('completed-day');
+
+                dDiv.addEventListener('click', () => {
+                    if (completedDates.has(dStr)) {
+                        completedDates.delete(dStr);
+                        dDiv.classList.remove('completed-day');
+                    } else {
+                        completedDates.add(dStr);
+                        dDiv.classList.add('completed-day');
+                        // Can't have a day both completed and blacked out
+                        blackedOutDates.delete(dStr);
+                    }
+                    saveAllData();
+                    calculate();
+                    renderBlackoutCalendar();
                 });
 
                 container.appendChild(dDiv);
@@ -662,7 +767,7 @@
                 }
             } else {
                 alertBanner.style.display = 'none';
-                lastCelebratedGoal = null; // reset if level slips down below target
+                lastCelebratedGoal = null;
             }
 
             if (!endStr) return;
@@ -708,8 +813,9 @@
 
         // Application Start Triggers
         loadAllData();
-        renderCalendar();
+        renderBlackoutCalendar();
+        renderCompletedCalendar();
         calculate();
     </script>
 </body>
-    </html>
+                    </html>

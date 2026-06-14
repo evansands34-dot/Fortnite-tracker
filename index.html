@@ -336,7 +336,7 @@
 <body>
 
     <header>
-        <h1>fortnite battle pass tracker</h1>
+        <h1 id="app-title">fortnite battle pass tracker</h1>
     </header>
 
     <div class="container">
@@ -356,7 +356,7 @@
                     <span id="next-milestone" style="color: var(--cyber-purple); font-weight: bold;">-</span>
                 </div>
 
-                <!-- NEW LIVE PACE TRACKER ROW -->
+                <!-- LIVE PACE TRACKER ROW -->
                 <div class="stat-row" style="border-bottom: none; padding: 0 0 15px 0;">
                     <span>Pace Status:</span>
                     <span id="pace-status" style="font-weight: bold;">-</span>
@@ -406,11 +406,9 @@
                 <label for="target-level">Custom Target Level</label>
                 <input type="number" id="target-level" value="100" min="2" max="1000">
 
-                <label for="season-start">Season Start Date (For Pace Tracking)</label>
-                <input type="date" id="season-start">
-
-                <label for="season-end">Season End Date</label>
-                <input type="date" id="season-end">
+                <div style="background: rgba(0, 240, 255, 0.05); border: 1px solid var(--panel-border); padding: 12px; border-radius: 6px; font-size: 0.85rem; color: var(--text-muted);">
+                    ⚙️ <strong>Season Tracking:</strong> Active Season timelines are automatically managed by the system configuration. No manual date inputs required.
+                </div>
             </div>
         </div>
 
@@ -473,7 +471,7 @@
                 <div class="calendar-nav">
                     <button onclick="changeCompletedMonth(-1)">◀ Prev</button>
                     <h3 id="completed-month-label" style="font-size: 1rem; color: #fff;"></h3>
-                    <button onclick="changeCompletedMonth(1)">Next ▶</button>
+                    <button onclick="changeCompletedMonth(1)">Next NEXUS_PLAYER ▶</button>
                 </div>
 
                 <div class="calendar-grid" id="completed-calendar-container">
@@ -537,11 +535,19 @@
         let completedCalendarDate = new Date();
         let lastCelebratedGoal = null;
 
+        // AUTOMATED SYSTEM CALENDAR CONFIGURATION
+        const SEASON_CONFIG = {
+            title: "fortnite ch7s2 tracker",
+            start: "2026-05-15",
+            end: "2026-08-20"
+        };
+
         const currentLevelInput = document.getElementById('current-level');
         const targetLevelInput = document.getElementById('target-level');
-        const seasonStartDateInput = document.getElementById('season-start');
-        const seasonEndDateInput = document.getElementById('season-end');
         const matchesInput = document.getElementById('matches-per-day');
+
+        // Dynamic header injection
+        document.getElementById('app-title').innerText = SEASON_CONFIG.title;
 
         // Tab Visibility Controls
         function switchTab(viewId, element) {
@@ -578,8 +584,6 @@
         function saveAllData() {
             localStorage.setItem('bp_curr_lvl', currentLevelInput.value);
             localStorage.setItem('bp_targ_lvl', targetLevelInput.value);
-            localStorage.setItem('bp_start_date', seasonStartDateInput.value);
-            localStorage.setItem('bp_end_date', seasonEndDateInput.value);
             localStorage.setItem('bp_matches', matchesInput.value);
             localStorage.setItem('bp_blackouts', JSON.stringify(Array.from(blackedOutDates)));
             localStorage.setItem('bp_completed', JSON.stringify(Array.from(completedDates)));
@@ -593,19 +597,6 @@
                 document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
                 if (targetLevelInput.value == "100") document.getElementById('preset-100').classList.add('active');
                 if (targetLevelInput.value == "200") document.getElementById('preset-200').classList.add('active');
-            }
-            
-            // Set dynamic baseline start date if empty
-            if (localStorage.getItem('bp_start_date')) {
-                seasonStartDateInput.value = localStorage.getItem('bp_start_date');
-            } else {
-                seasonStartDateInput.value = "2026-05-15"; 
-            }
-
-            if (localStorage.getItem('bp_end_date')) {
-                seasonEndDateInput.value = localStorage.getItem('bp_end_date');
-            } else {
-                seasonEndDateInput.value = "2026-08-20";
             }
 
             if (localStorage.getItem('bp_blackouts')) {
@@ -751,8 +742,6 @@
         function calculate() {
             const curr = parseInt(currentLevelInput.value) || 1;
             const targ = parseInt(targetLevelInput.value) || 100;
-            const startStr = seasonStartDateInput.value;
-            const endStr = seasonEndDateInput.value;
             const matches = parseInt(matchesInput.value) || 0;
 
             // Match Estimator Evaluation
@@ -788,13 +777,11 @@
                 lastCelebratedGoal = null;
             }
 
-            if (!endStr || !startStr) return;
-
             const today = new Date();
             today.setHours(0,0,0,0);
-            const startDate = new Date(startStr);
+            const startDate = new Date(SEASON_CONFIG.start);
             startDate.setHours(0,0,0,0);
-            const endDate = new Date(endStr);
+            const endDate = new Date(SEASON_CONFIG.end);
             endDate.setHours(0,0,0,0);
 
             // Output Calculations
@@ -831,7 +818,6 @@
             const daysPassed = Math.ceil((today.getTime() - startDate.getTime()) / (1000 * 3600 * 24));
 
             if (totalSeasonDuration > 0 && daysPassed >= 0) {
-                // Static ideal standard baseline pace per day from beginning to end
                 const idealLevelsPerDay = (targ - 1) / totalSeasonDuration;
                 const expectedCurrentLevel = 1 + (idealLevelsPerDay * daysPassed);
                 
@@ -854,7 +840,7 @@
             }
         }
 
-        [currentLevelInput, targetLevelInput, seasonStartDateInput, seasonEndDateInput, matchesInput].forEach(input => {
+        [currentLevelInput, targetLevelInput, matchesInput].forEach(input => {
             input.addEventListener('input', () => {
                 saveAllData();
                 calculate();

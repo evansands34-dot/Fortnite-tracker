@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fortnite Battle Pass Tracker</title>
+    <!-- Canvas Confetti Library Dependency -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root {
             --bg-dark: #0b0e14;
@@ -15,7 +17,7 @@
             --text-main: #f3f4f6;
             --text-muted: #9ca3af;
             --danger: #ef4444;
-            --success: #10b981;
+            --success: #22c55e;
         }
 
         * {
@@ -37,28 +39,14 @@
             text-align: center;
             border-bottom: 3px solid var(--cyber-blue);
             box-shadow: 0 4px 20px rgba(0, 240, 255, 0.15);
-            position: relative;
         }
 
         header h1 {
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             text-transform: uppercase;
             letter-spacing: 2px;
             color: #fff;
             text-shadow: 0 0 10px var(--cyber-blue);
-        }
-
-        .season-badge {
-            display: inline-block;
-            background: rgba(0, 240, 255, 0.1);
-            border: 1px solid var(--cyber-blue);
-            color: var(--cyber-blue);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            margin-top: 8px;
-            text-transform: uppercase;
         }
 
         .container {
@@ -67,7 +55,7 @@
             padding: 0 15px;
         }
 
-        /* Views management */
+        /* View Switching Layouts */
         .view {
             display: none;
         }
@@ -115,7 +103,54 @@
             border-color: var(--cyber-blue);
         }
 
-        /* Goal Quick Buttons */
+        /* Level Alert Notification Banner */
+        .alert-banner {
+            display: none;
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid var(--success);
+            color: #fff;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            text-align: center;
+            text-shadow: 0 0 5px var(--success);
+        }
+
+        /* Progress Percentage Bar */
+        .progress-container {
+            background: #0b0e14;
+            border-radius: 10px;
+            height: 24px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--panel-border);
+            margin-top: 10px;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, var(--cyber-purple), var(--cyber-blue));
+            height: 100%;
+            width: 0%;
+            transition: width 0.4s ease;
+            box-shadow: 0 0 10px var(--cyber-blue);
+        }
+
+        .progress-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: bold;
+            font-size: 0.85rem;
+            color: #fff;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        /* Preset Target Options Grid */
         .goal-presets {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -140,49 +175,35 @@
             box-shadow: 0 0 8px var(--cyber-purple);
         }
 
-        /* Progress Bar */
-        .progress-container {
+        /* Daily Checklist Interface */
+        .checklist-item {
+            display: flex;
+            align-items: center;
             background: #0b0e14;
-            border-radius: 10px;
-            height: 24px;
-            width: 100%;
-            position: relative;
-            overflow: hidden;
             border: 1px solid var(--panel-border);
-            margin-top: 10px;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
         }
 
-        .progress-bar {
-            background: linear-gradient(90deg, var(--cyber-purple), var(--cyber-blue));
-            height: 100%;
-            width: 0%;
-            transition: width 0.4s ease;
-            box-shadow: 0 0 10px var(--cyber-blue);
+        .checklist-item input[type="checkbox"] {
+            margin-right: 15px;
+            transform: scale(1.3);
+            accent-color: var(--cyber-blue);
+            cursor: pointer;
         }
 
-        .progress-bar.pulse {
-            animation: barPulse 0.5s ease-in-out infinite alternate;
-        }
-
-        @keyframes barPulse {
-            from { filter: brightness(1); }
-            to { filter: brightness(1.5); }
-        }
-
-        .progress-text {
-            position: absolute;
-            width: 100%;
-            text-align: center;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-weight: bold;
-            font-size: 0.85rem;
+        .checklist-text h4 {
+            font-size: 0.95rem;
             color: #fff;
-            text-shadow: 1px 1px 2px #000;
         }
 
-        /* Calendar Controls */
+        .checklist-text span {
+            font-size: 0.8rem;
+            color: var(--fortnite-yellow);
+        }
+
+        /* Full Month Engine Grid */
         .calendar-nav {
             display: flex;
             justify-content: space-between;
@@ -194,9 +215,10 @@
             background: #1e293b;
             border: 1px solid var(--panel-border);
             color: white;
-            padding: 6px 12px;
-            border-radius: 4px;
+            padding: 8px 14px;
+            border-radius: 6px;
             cursor: pointer;
+            font-weight: bold;
         }
 
         .calendar-grid {
@@ -221,7 +243,6 @@
             border-radius: 4px;
             cursor: pointer;
             user-select: none;
-            transition: background 0.2s;
         }
 
         .calendar-day.empty {
@@ -237,64 +258,7 @@
             border-color: #b91c1c;
         }
 
-        /* Checklist Styles */
-        .checklist-item {
-            display: flex;
-            align-items: center;
-            background: #0b0e14;
-            border: 1px solid var(--panel-border);
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .checklist-item input[type="checkbox"] {
-            margin-right: 12px;
-            transform: scale(1.2);
-            accent-color: var(--cyber-blue);
-        }
-
-        .checklist-details {
-            flex-grow: 1;
-        }
-
-        .checklist-title {
-            font-weight: bold;
-            font-size: 0.95rem;
-        }
-
-        .checklist-xp {
-            font-size: 0.8rem;
-            color: var(--fortnite-yellow);
-        }
-
-        /* Alert Notification Box */
-        #alert-banner {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-100px);
-            background: linear-gradient(135deg, var(--cyber-purple), #3b0764);
-            border: 2px solid var(--cyber-blue);
-            box-shadow: 0 0 15px var(--cyber-blue);
-            padding: 12px 24px;
-            border-radius: 30px;
-            z-index: 2000;
-            font-weight: bold;
-            color: white;
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            pointer-events: none;
-        }
-
-        #alert-banner.show {
-            transform: translateX(-50%) translateY(0);
-        }
-
-        /* Stats display */
+        /* Dashboard Stat Columns */
         .stat-row {
             display: flex;
             justify-content: space-between;
@@ -317,7 +281,7 @@
             text-shadow: 0 0 5px rgba(0, 240, 255, 0.4);
         }
 
-        /* Bottom Nav Tab Bar (4 TABS NOW) */
+        /* Floating 4-Tab Bar Navigation */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -338,7 +302,7 @@
             align-items: center;
             color: var(--text-muted);
             cursor: pointer;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             font-weight: 500;
             width: 25%;
             height: 100%;
@@ -353,29 +317,35 @@
         }
 
         .nav-icon {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             margin-bottom: 2px;
         }
     </style>
 </head>
 <body>
 
-    <div id="alert-banner">🎉 Level Up! Keep Grinding!</div>
-
     <header>
         <h1>fortnite battle pass tracker</h1>
-        <div id="season-badge" class="season-badge">Detecting Season...</div>
     </header>
 
     <div class="container">
         
+        <!-- VIEW 1: MAIN DASHBOARD -->
         <div id="dashboard-view" class="view active">
+            <!-- Level Target Met Banner -->
+            <div id="level-alert" class="alert-banner">🎉 TARGET GOAL REACHED! LEVEL UP COMPLETE! 🎉</div>
+
             <div class="card">
-                <h2>Your Current Status</h2>
+                <h2>Your Progress Status</h2>
                 <label for="current-level">Current Level</label>
                 <input type="number" id="current-level" value="1" min="1" max="1000">
                 
-                <label>Goal Completion Progress</label>
+                <div class="stat-row" style="border-bottom: none; padding: 0 0 10px 0;">
+                    <span>Next Milestone Reward:</span>
+                    <span id="next-milestone" style="color: var(--cyber-purple); font-weight: bold;">-</span>
+                </div>
+
+                <label>Goal Progress Bar</label>
                 <div class="progress-container">
                     <div id="progress-bar" class="progress-bar"></div>
                     <div id="progress-text" class="progress-text">0%</div>
@@ -383,13 +353,13 @@
             </div>
 
             <div class="card">
-                <h2>Your Strategy Engine</h2>
+                <h2>Your Strategy Output</h2>
                 <div class="stat-row">
                     <span>Days Left Overall:</span>
                     <span id="days-left" class="stat-val">-</span>
                 </div>
                 <div class="stat-row">
-                    <span>Playable Days Remaining:</span>
+                    <span>Playable Days Left:</span>
                     <span id="playable-days" class="stat-val" style="color: var(--cyber-blue);">-</span>
                 </div>
                 <div class="stat-row">
@@ -405,21 +375,341 @@
                     <span id="xp-per-day" class="stat-val highlight">-</span>
                 </div>
             </div>
-
-            <div class="card">
-                <h2>Match Estimator (Per Play Day)</h2>
-                <div class="stat-row">
-                    <span>Match Quests Needed:</span>
-                    <span id="matches-needed" class="stat-val" style="color: var(--cyber-purple);">-</span>
-                </div>
-                <p style="font-size:0.75rem; color:var(--text-muted); margin-top:5px;">
-                    *Assumes average match payout of ~15,000 XP including basic survival & performance rewards.
-                </p>
-            </div>
         </div>
 
+        <!-- VIEW 2: TARGET GOALS -->
         <div id="goals-view" class="view">
             <div class="card">
                 <h2>Choose Target Goal</h2>
                 <div class="goal-presets">
-                    <button id="preset-100" class="
+                    <button id="preset-100" class="btn-preset active" onclick="setPresetGoal(100, this)">Battle Pass (100)</button>
+                    <button id="preset-200" class="btn-preset" onclick="setPresetGoal(200, this)">Bonus Levels (200)</button>
+                </div>
+                
+                <label for="target-level">Custom Target Level</label>
+                <input type="number" id="target-level" value="100" min="2" max="1000">
+
+                <label for="season-end">Season End Date</label>
+                <input type="date" id="season-end">
+            </div>
+        </div>
+
+        <!-- VIEW 3: DAILY CHECKS & ESTIMATOR -->
+        <div id="quests-view" class="view">
+            <div class="card">
+                <h2>Daily Checklist</h2>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">
+                    Keep tabs on your daily routines here. Checkboxes stay saved locally.
+                </p>
+                
+                <div class="checklist-item">
+                    <input type="checkbox" id="q-match" onchange="saveQuests()">
+                    <div class="checklist-text">
+                        <h4>Daily Match Quests</h4>
+                        <span>+45,000 XP</span>
+                    </div>
+                </div>
+
+                <div class="checklist-item">
+                    <input type="checkbox" id="q-creative" onchange="saveQuests()">
+                    <div class="checklist-text">
+                        <h4>Creative Mode Playtime</h4>
+                        <span>+60,000 XP</span>
+                    </div>
+                </div>
+
+                <div class="checklist-item">
+                    <input type="checkbox" id="q-lego" onchange="saveQuests()">
+                    <div class="checklist-text">
+                        <h4>Lego Sandbox/Survival</h4>
+                        <span>+40,000 XP</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Match Estimator Feature Integration -->
+            <div class="card">
+                <h2>Match Estimator</h2>
+                <label for="matches-per-day">Estimated Matches Played Per Day</label>
+                <input type="number" id="matches-per-day" value="3" min="0" max="50">
+                <div class="stat-row">
+                    <span>Estimated Match XP / Day:</span>
+                    <span id="estimated-match-xp" class="stat-val" style="color: var(--cyber-blue);">24,000 XP</span>
+                </div>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 10px;">
+                    Assumes an average baseline of roughly 8,000 XP earned per match.
+                </p>
+            </div>
+        </div>
+
+        <!-- VIEW 4: BLACKOUT CALENDAR -->
+        <div id="calendar-view" class="view">
+            <div class="card">
+                <h2>Blackout Calendar</h2>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 15px;">
+                    Tap on days you cannot play to completely remove them from your tracker math.
+                </p>
+                
+                <div class="calendar-nav">
+                    <button onclick="changeMonth(-1)">◀ Prev</button>
+                    <h3 id="month-label" style="font-size: 1rem; color: #fff;"></h3>
+                    <button onclick="changeMonth(1)">Next ▶</button>
+                </div>
+
+                <div class="calendar-grid" id="calendar-container">
+                    <!-- Script Controlled Calendar Build -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 4 INDEPENDENT TABS NAVIGATION MENU BAR -->
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('dashboard-view', this)">
+            <span class="nav-icon">📊</span>
+            <span>Dashboard</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('goals-view', this)">
+            <span class="nav-icon">🎯</span>
+            <span>Goals</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('quests-view', this)">
+            <span class="nav-icon">⚔️</span>
+            <span>Quests</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('calendar-view', this)">
+            <span class="nav-icon">📅</span>
+            <span>Calendar</span>
+        </div>
+    </nav>
+
+    <script>
+        const XP_PER_LEVEL = 80000;
+        let blackedOutDates = new Set();
+        let currentCalendarDate = new Date();
+        let lastCelebratedGoal = null;
+
+        const currentLevelInput = document.getElementById('current-level');
+        const targetLevelInput = document.getElementById('target-level');
+        const seasonEndDateInput = document.getElementById('season-end');
+        const matchesInput = document.getElementById('matches-per-day');
+
+        // Tab Visibility Controls
+        function switchTab(viewId, element) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            
+            document.getElementById(viewId).classList.add('active');
+            element.classList.add('active');
+        }
+
+        // Target Preset Assign Engine
+        function setPresetGoal(level, button) {
+            document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
+            button.classList.add('active');
+            targetLevelInput.value = level;
+            saveAllData();
+            calculate();
+        }
+
+        // Quest Storage Updates
+        function saveQuests() {
+            localStorage.setItem('bp_q_match', document.getElementById('q-match').checked);
+            localStorage.setItem('bp_q_creative', document.getElementById('q-creative').checked);
+            localStorage.setItem('bp_q_lego', document.getElementById('q-lego').checked);
+        }
+
+        function loadQuests() {
+            document.getElementById('q-match').checked = localStorage.getItem('bp_q_match') === 'true';
+            document.getElementById('q-creative').checked = localStorage.getItem('bp_q_creative') === 'true';
+            document.getElementById('q-lego').checked = localStorage.getItem('bp_q_lego') === 'true';
+        }
+
+        // Master Browser Persistence State Saves
+        function saveAllData() {
+            localStorage.setItem('bp_curr_lvl', currentLevelInput.value);
+            localStorage.setItem('bp_targ_lvl', targetLevelInput.value);
+            localStorage.setItem('bp_end_date', seasonEndDateInput.value);
+            localStorage.setItem('bp_matches', matchesInput.value);
+            localStorage.setItem('bp_blackouts', JSON.stringify(Array.from(blackedOutDates)));
+        }
+
+        function loadAllData() {
+            if (localStorage.getItem('bp_curr_lvl')) currentLevelInput.value = localStorage.getItem('bp_curr_lvl');
+            if (localStorage.getItem('bp_matches')) matchesInput.value = localStorage.getItem('bp_matches');
+            if (localStorage.getItem('bp_targ_lvl')) {
+                targetLevelInput.value = localStorage.getItem('bp_targ_lvl');
+                document.querySelectorAll('.btn-preset').forEach(b => b.classList.remove('active'));
+                if (targetLevelInput.value == "100") document.getElementById('preset-100').classList.add('active');
+                if (targetLevelInput.value == "200") document.getElementById('preset-200').classList.add('active');
+            }
+            
+            if (localStorage.getItem('bp_end_date')) {
+                seasonEndDateInput.value = localStorage.getItem('bp_end_date');
+            } else {
+                seasonEndDateInput.value = "2026-08-20"; // Automatic Season 3 placeholder target default
+            }
+
+            if (localStorage.getItem('bp_blackouts')) {
+                blackedOutDates = new Set(JSON.parse(localStorage.getItem('bp_blackouts')));
+            }
+            loadQuests();
+        }
+
+        // Infinite Month Navigation Processor
+        function changeMonth(direction) {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + direction);
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const container = document.getElementById('calendar-container');
+            container.innerHTML = '';
+            
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+            
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            document.getElementById('month-label').innerText = `${monthNames[month]} ${year}`;
+
+            const daysOfWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+            daysOfWeek.forEach(d => {
+                const h = document.createElement('div');
+                h.classList.add('calendar-header');
+                h.innerText = d;
+                container.appendChild(h);
+            });
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const totalDays = new Date(year, month + 1, 0).getDate();
+
+            for(let i = 0; i < firstDay; i++) {
+                const e = document.createElement('div');
+                e.classList.add('calendar-day', 'empty');
+                container.appendChild(e);
+            }
+
+            for(let day = 1; day <= totalDays; day++) {
+                const dDiv = document.createElement('div');
+                dDiv.classList.add('calendar-day');
+                dDiv.innerText = day;
+                
+                const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                
+                if (blackedOutDates.has(dStr)) dDiv.classList.add('blackout');
+
+                dDiv.addEventListener('click', () => {
+                    if (blackedOutDates.has(dStr)) {
+                        blackedOutDates.delete(dStr);
+                        dDiv.classList.remove('blackout');
+                    } else {
+                        blackedOutDates.add(dStr);
+                        dDiv.classList.add('blackout');
+                    }
+                    saveAllData();
+                    calculate();
+                });
+
+                container.appendChild(dDiv);
+            }
+        }
+
+        // Trigger Confetti Celebration Blast
+        function triggerCelebration() {
+            confetti({
+                particleCount: 150,
+                spread: 80,
+                origin: { y: 0.6 },
+                colors: ['#00f0ff', '#9d4edd', '#fde047', '#22c55e']
+            });
+        }
+
+        // Level Progression Math Calculations
+        function calculate() {
+            const curr = parseInt(currentLevelInput.value) || 1;
+            const targ = parseInt(targetLevelInput.value) || 100;
+            const endStr = seasonEndDateInput.value;
+            const matches = parseInt(matchesInput.value) || 0;
+
+            // Match Estimator Evaluation
+            const estimatedDailyMatchXP = matches * 8000;
+            document.getElementById('estimated-match-xp').innerText = `${estimatedDailyMatchXP.toLocaleString()} XP`;
+
+            // Milestone Tracker Check
+            const milestones = [100, 150, 200, 250, 300, 400, 500];
+            let nextMilestoneValue = "Max Reached";
+            for (let m of milestones) {
+                if (curr < m) {
+                    nextMilestoneValue = `Level ${m}`;
+                    break;
+                }
+            }
+            document.getElementById('next-milestone').innerText = nextMilestoneValue;
+
+            // Percentage Bar Formula
+            const percent = Math.min(100, Math.max(0, (curr / targ) * 100));
+            document.getElementById('progress-bar').style.width = `${percent}%`;
+            document.getElementById('progress-text').innerText = `${percent.toFixed(1)}%`;
+
+            // Goal Alerts and Confetti Engine Trigger
+            const alertBanner = document.getElementById('level-alert');
+            if (curr >= targ) {
+                alertBanner.style.display = 'block';
+                if (lastCelebratedGoal !== targ) {
+                    triggerCelebration();
+                    lastCelebratedGoal = targ;
+                }
+            } else {
+                alertBanner.style.display = 'none';
+                lastCelebratedGoal = null; // reset if level slips down below target
+            }
+
+            if (!endStr) return;
+
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const endDate = new Date(endStr);
+            endDate.setHours(0,0,0,0);
+
+            const totalDays = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 3600 * 24)) + 1;
+
+            if (totalDays <= 0) {
+                document.getElementById('levels-per-day').innerText = "Ended";
+                document.getElementById('xp-per-day').innerText = "0";
+                return;
+            }
+
+            let missingDays = 0;
+            blackedOutDates.forEach(dStr => {
+                const bDate = new Date(dStr);
+                bDate.setHours(0,0,0,0);
+                if (bDate >= today && bDate <= endDate) missingDays++;
+            });
+
+            const playableDays = Math.max(1, totalDays - missingDays);
+            const lvlsNeeded = Math.max(0, targ - curr);
+            const lvlsPerDay = lvlsNeeded / playableDays;
+            const xpPerDay = lvlsPerDay * XP_PER_LEVEL;
+
+            document.getElementById('days-left').innerText = totalDays;
+            document.getElementById('playable-days').innerText = `${playableDays} (Skipped ${missingDays})`;
+            document.getElementById('levels-needed').innerText = lvlsNeeded;
+            document.getElementById('levels-per-day').innerText = lvlsPerDay.toFixed(2);
+            document.getElementById('xp-per-day').innerText = Math.round(xpPerDay).toLocaleString();
+        }
+
+        [currentLevelInput, targetLevelInput, seasonEndDateInput, matchesInput].forEach(input => {
+            input.addEventListener('input', () => {
+                saveAllData();
+                calculate();
+            });
+        });
+
+        // Application Start Triggers
+        loadAllData();
+        renderCalendar();
+        calculate();
+    </script>
+</body>
+    </html>

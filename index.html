@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fortnite Battle Pass Tracker Ultimate</title>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <title>Fortnite Battle Pass Tracker</title>
     <style>
         :root {
             --bg-dark: #0b0e14;
@@ -38,6 +37,7 @@
             text-align: center;
             border-bottom: 3px solid var(--cyber-blue);
             box-shadow: 0 4px 20px rgba(0, 240, 255, 0.15);
+            position: relative;
         }
 
         header h1 {
@@ -67,8 +67,13 @@
             padding: 0 15px;
         }
 
-        .view { display: none; }
-        .view.active { display: block; }
+        /* Views management */
+        .view {
+            display: none;
+        }
+        .view.active {
+            display: block;
+        }
 
         .card {
             background-color: var(--panel-bg);
@@ -94,7 +99,7 @@
             color: var(--text-muted);
         }
 
-        input[type="number"], input[type="date"], input[type="text"], select {
+        input[type="number"], input[type="date"] {
             width: 100%;
             padding: 12px;
             background: #0b0e14;
@@ -105,38 +110,12 @@
             margin-bottom: 15px;
         }
 
-        input:focus, select:focus {
+        input:focus {
             outline: none;
             border-color: var(--cyber-blue);
         }
 
-        /* Profile Banner Customizer */
-        .profile-banner {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            background: linear-gradient(90deg, #1e293b, transparent);
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            border-left: 4px solid var(--cyber-purple);
-        }
-
-        .profile-avatar {
-            font-size: 2.2rem;
-            background: #0b0e14;
-            padding: 8px;
-            border-radius: 50%;
-            border: 1px solid var(--panel-border);
-        }
-
-        .profile-name {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #fff;
-        }
-
-        /* Goal Presets */
+        /* Goal Quick Buttons */
         .goal-presets {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -178,6 +157,16 @@
             height: 100%;
             width: 0%;
             transition: width 0.4s ease;
+            box-shadow: 0 0 10px var(--cyber-blue);
+        }
+
+        .progress-bar.pulse {
+            animation: barPulse 0.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes barPulse {
+            from { filter: brightness(1); }
+            to { filter: brightness(1.5); }
         }
 
         .progress-text {
@@ -191,35 +180,6 @@
             font-size: 0.85rem;
             color: #fff;
             text-shadow: 1px 1px 2px #000;
-        }
-
-        /* Checklist / Quest Items */
-        .quest-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px;
-            background: #0b0e14;
-            border: 1px solid var(--panel-border);
-            border-radius: 6px;
-            margin-bottom: 10px;
-            cursor: pointer;
-        }
-
-        .quest-item input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: var(--cyber-blue);
-        }
-
-        .quest-info h4 {
-            font-size: 0.95rem;
-            color: #fff;
-        }
-
-        .quest-info p {
-            font-size: 0.8rem;
-            color: var(--fortnite-yellow);
         }
 
         /* Calendar Controls */
@@ -260,14 +220,78 @@
             font-size: 0.9rem;
             border-radius: 4px;
             cursor: pointer;
+            user-select: none;
+            transition: background 0.2s;
         }
 
-        .calendar-day.empty { background: transparent; border: none; }
+        .calendar-day.empty {
+            background: transparent;
+            border: none;
+            cursor: default;
+        }
+
         .calendar-day.blackout {
             background: var(--danger);
             color: white;
             text-decoration: line-through;
             border-color: #b91c1c;
+        }
+
+        /* Checklist Styles */
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            background: #0b0e14;
+            border: 1px solid var(--panel-border);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .checklist-item input[type="checkbox"] {
+            margin-right: 12px;
+            transform: scale(1.2);
+            accent-color: var(--cyber-blue);
+        }
+
+        .checklist-details {
+            flex-grow: 1;
+        }
+
+        .checklist-title {
+            font-weight: bold;
+            font-size: 0.95rem;
+        }
+
+        .checklist-xp {
+            font-size: 0.8rem;
+            color: var(--fortnite-yellow);
+        }
+
+        /* Alert Notification Box */
+        #alert-banner {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: linear-gradient(135deg, var(--cyber-purple), #3b0764);
+            border: 2px solid var(--cyber-blue);
+            box-shadow: 0 0 15px var(--cyber-blue);
+            padding: 12px 24px;
+            border-radius: 30px;
+            z-index: 2000;
+            font-weight: bold;
+            color: white;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            pointer-events: none;
+        }
+
+        #alert-banner.show {
+            transform: translateX(-50%) translateY(0);
         }
 
         /* Stats display */
@@ -278,15 +302,22 @@
             border-bottom: 1px solid var(--panel-border);
         }
 
-        .stat-row:last-child { border-bottom: none; }
-        .stat-val { font-weight: bold; color: var(--fortnite-yellow); }
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-val {
+            font-weight: bold;
+            color: var(--fortnite-yellow);
+        }
+
         .stat-val.highlight {
             color: var(--cyber-blue);
             font-size: 1.2rem;
             text-shadow: 0 0 5px rgba(0, 240, 255, 0.4);
         }
 
-        /* Bottom Nav Tab Bar (4 TABS) */
+        /* Bottom Nav Tab Bar (4 TABS NOW) */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -317,4 +348,78 @@
 
         .nav-item.active {
             color: var(--cyber-blue);
-            background: linear-gradient(to top, rgba(0
+            background: linear-gradient(to top, rgba(0,240,255,0.05), transparent);
+            border-top: 3px solid var(--cyber-blue);
+        }
+
+        .nav-icon {
+            font-size: 1.2rem;
+            margin-bottom: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="alert-banner">🎉 Level Up! Keep Grinding!</div>
+
+    <header>
+        <h1>fortnite battle pass tracker</h1>
+        <div id="season-badge" class="season-badge">Detecting Season...</div>
+    </header>
+
+    <div class="container">
+        
+        <div id="dashboard-view" class="view active">
+            <div class="card">
+                <h2>Your Current Status</h2>
+                <label for="current-level">Current Level</label>
+                <input type="number" id="current-level" value="1" min="1" max="1000">
+                
+                <label>Goal Completion Progress</label>
+                <div class="progress-container">
+                    <div id="progress-bar" class="progress-bar"></div>
+                    <div id="progress-text" class="progress-text">0%</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Your Strategy Engine</h2>
+                <div class="stat-row">
+                    <span>Days Left Overall:</span>
+                    <span id="days-left" class="stat-val">-</span>
+                </div>
+                <div class="stat-row">
+                    <span>Playable Days Remaining:</span>
+                    <span id="playable-days" class="stat-val" style="color: var(--cyber-blue);">-</span>
+                </div>
+                <div class="stat-row">
+                    <span>Levels Needed:</span>
+                    <span id="levels-needed" class="stat-val">-</span>
+                </div>
+                <div class="stat-row">
+                    <span>Levels Per Playable Day:</span>
+                    <span id="levels-per-day" class="stat-val highlight">-</span>
+                </div>
+                <div class="stat-row">
+                    <span>XP Per Playable Day:</span>
+                    <span id="xp-per-day" class="stat-val highlight">-</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Match Estimator (Per Play Day)</h2>
+                <div class="stat-row">
+                    <span>Match Quests Needed:</span>
+                    <span id="matches-needed" class="stat-val" style="color: var(--cyber-purple);">-</span>
+                </div>
+                <p style="font-size:0.75rem; color:var(--text-muted); margin-top:5px;">
+                    *Assumes average match payout of ~15,000 XP including basic survival & performance rewards.
+                </p>
+            </div>
+        </div>
+
+        <div id="goals-view" class="view">
+            <div class="card">
+                <h2>Choose Target Goal</h2>
+                <div class="goal-presets">
+                    <button id="preset-100" class="
